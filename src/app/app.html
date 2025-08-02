@@ -41,6 +41,11 @@
 
   <!-- Sankey Chart -->
   <div class="chart-container">
+    <div class="chart-header">
+      <p class="chart-description">
+        {{getTotalTmlCount()}} TMLs with CR ≤ {{initialRate()}} mpy ({{startDate()}}) flowing to corrosion rate categories by {{endDate()}}. Click on any flow to view detailed TML and circuit information.
+      </p>
+    </div>
     <app-sankey-chart 
       (linkClick)="onLinkClick($event)">
     </app-sankey-chart>

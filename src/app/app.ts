@@ -70,4 +70,18 @@ export class App implements OnInit {
     this.isModalVisible.set(false);
     this.selectedTmlData.set(null);
   }
+
+  getTotalTmlCount(): number {
+    const data = this.currentData();
+    if (!data || !data.links) return 0;
+    
+    // Sum up all the TML counts from the source links
+    return data.links.reduce((total, link) => {
+      // Links from source node (index 0) represent the flow to each category
+      if (link.source === 0) {
+        return total + (link.value || 0);
+      }
+      return total;
+    }, 0);
+  }
 }

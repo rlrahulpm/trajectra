@@ -1,0 +1,52 @@
+<div class="bg-gray-50 font-sans text-gray-800">
+  <div class="p-4 sm-p-8">
+    <h1 class="text-2xl font-bold mb-6">TML Corrosion Flow</h1>
+
+    <!-- Input Controls -->
+    <div class="flex flex-wrap gap-4 mb-4 items-center">
+      <div>
+        <label for="initialRate" class="mr-2 font-medium">Initial Corrosion Rate (mpy):</label>
+        <input 
+          type="text" 
+          id="initialRate" 
+          class="px-3 py-2 border rounded" 
+          placeholder="e.g. 1.5" 
+          [value]="initialRate()"
+          (input)="onInputChange('initialRate', $event)" />
+      </div>
+      <div>
+        <label for="startDate" class="mr-2 font-medium">Start Date:</label>
+        <input 
+          type="date" 
+          id="startDate" 
+          class="px-3 py-2 border rounded"
+          [value]="startDate()"
+          (input)="onInputChange('startDate', $event)" />
+      </div>
+      <div>
+        <label for="endDate" class="mr-2 font-medium">End Date:</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          class="px-3 py-2 border rounded"
+          [value]="endDate()"
+          (input)="onInputChange('endDate', $event)" />
+      </div>
+    </div>
+
+    <!-- Sankey Chart -->
+    <app-sankey-chart 
+      (linkClick)="onLinkClick($event)">
+    </app-sankey-chart>
+  </div>
+
+  <!-- TML Modal -->
+  <app-tml-modal 
+    [isVisible]="isModalVisible()" 
+    [tmlData]="selectedTmlData()" 
+    (close)="closeModal()">
+  </app-tml-modal>
+</div>
+
+
+<router-outlet />

@@ -11,14 +11,12 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div id="sankey-container" class="border rounded overflow-x-auto">
-      <div class="w-full max-w-5xl mx-auto">
-        <svg #sankeyChart 
-             class="w-full h-auto" 
-             viewBox="0 0 900 500" 
-             preserveAspectRatio="xMidYMid meet">
-        </svg>
-      </div>
+    <div class="chart-wrapper">
+      <svg #sankeyChart 
+           width="702" 
+           height="390" 
+           style="max-width: 100%; display: block; margin: 0 auto;">
+      </svg>
     </div>
   `
 })
@@ -27,8 +25,8 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
   @Input() data: CorrosionData | null = null;
   @Output() linkClick = new EventEmitter<TmlData>();
 
-  private width = 900;
-  private height = 500;
+  private width = 702;
+  private height = 390;
   private svg: any;
   private sankeyGenerator: any;
   private dataSubscription: Subscription | null = null;
@@ -152,20 +150,20 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private getLinkColor(targetName: string): string {
-    if (targetName.includes("< 10")) return "#3B82F6";
-    if (targetName.includes("10-20")) return "#10B981";
-    if (targetName.includes("20-30")) return "#F59E0B";
+    if (targetName.includes("< 10")) return "#22C55E";
+    if (targetName.includes("10-20")) return "#FACC15";
+    if (targetName.includes("20-30")) return "#F97316";
     if (targetName.includes("30-50")) return "#EF4444";
-    if (targetName.includes("> 50")) return "#9CA3AF";
+    if (targetName.includes("> 50")) return "#DC2626";
     return "#ccc";
   }
 
   private getNodeColor(nodeName: string): string {
-    if (nodeName.includes("< 10")) return "#3B82F6";
-    if (nodeName.includes("10-20")) return "#10B981";
-    if (nodeName.includes("20-30")) return "#F59E0B";
+    if (nodeName.includes("< 10")) return "#22C55E";
+    if (nodeName.includes("10-20")) return "#FACC15";
+    if (nodeName.includes("20-30")) return "#F97316";
     if (nodeName.includes("30-50")) return "#EF4444";
-    if (nodeName.includes("> 50")) return "#9CA3AF";
+    if (nodeName.includes("> 50")) return "#DC2626";
     return "#6366F1";
   }
 }

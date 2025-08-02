@@ -13,39 +13,56 @@ import { CorrosionDataService } from '../../services/corrosion-data.service';
       class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center"
       (click)="closeModal()">
       <div 
-        class="bg-white p-6 rounded shadow-lg max-w-4xl w-full max-h-90vh overflow-y-auto"
+        class="modal-content"
         (click)="$event.stopPropagation()">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold">TMLs by Circuit</h2>
-          <button 
-            (click)="downloadCsv()" 
-            class="px-3 py-1 bg-green-600 text-white rounded text-sm">
-            Download CSV
-          </button>
+        
+        <!-- Header -->
+        <div class="modal-header">
+          <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold">TMLs by Circuit</h2>
+            <button 
+              (click)="downloadCsv()" 
+              class="download-btn">
+              📥 Download CSV
+            </button>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-6 mb-4">
-          <div>
-            <h3 class="font-semibold mb-3 text-gray-900">TML & Circuit IDs</h3>
-            <div class="text-sm">
-              <div *ngFor="let circuit of getCircuitEntries()" class="mb-2">
-                <strong>{{circuit.key}}</strong>
-                <ul class="list-disc list-inside text-gray-700">
-                  <li *ngFor="let tml of circuit.value">{{tml}}</li>
+
+        <!-- Content -->
+        <div class="modal-body">
+          
+          <!-- AI Notes Section -->
+          <div class="mb-6">
+            <h3 class="section-title">AI Notes</h3>
+            <div class="ai-notes-box">
+              <p class="ai-notes-text">
+                Most TMLs in this group belong to aging pipelines with high moisture exposure and minimal insulation. Recommend prioritizing circuits with repeated entries across categories.
+              </p>
+            </div>
+          </div>
+
+          <!-- TML & Circuit IDs Section -->
+          <div class="circuit-group">
+            <h3 class="section-title">TML & Circuit IDs</h3>
+            <div>
+              <div *ngFor="let circuit of getCircuitEntries()" class="circuit-container">
+                <div class="circuit-title">{{circuit.key}}</div>
+                <ul class="tml-list">
+                  <li *ngFor="let tml of circuit.value" class="tml-item">
+                    <span class="bullet-point"></span>
+                    {{tml}}
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
-          <div>
-            <h3 class="font-semibold mb-3 text-gray-900">AI Notes</h3>
-            <div class="bg-gray-100 p-3 rounded text-sm text-gray-700">
-              <p>Most TMLs in this group belong to aging pipelines with high moisture exposure and minimal insulation. Recommend prioritizing circuits with repeated entries across categories.</p>
-            </div>
-          </div>
         </div>
-        <div class="mt-4 text-right">
+
+        <!-- Footer -->
+        <div class="modal-footer">
           <button 
             (click)="closeModal()" 
-            class="px-4 py-2 bg-blue-600 text-white rounded">
+            class="close-btn">
             Close
           </button>
         </div>
@@ -67,6 +84,10 @@ export class TmlModalComponent {
 
   closeModal(): void {
     this.close.emit();
+  }
+
+  getCurrentDate(): string {
+    return new Date().toLocaleDateString();
   }
 
   downloadCsv(): void {

@@ -1,40 +1,46 @@
-<div class="bg-gray-50 font-sans text-gray-800">
-  <div class="p-4 sm-p-8">
-    <h1 class="text-2xl font-bold mb-6">TML Corrosion Flow</h1>
+<div class="main-container">
+  
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title gradient-title">TRAJECTRA</h1>
+  </div>
 
-    <!-- Input Controls -->
-    <div class="flex flex-wrap gap-4 mb-4 items-center">
-      <div>
-        <label for="initialRate" class="mr-2 font-medium">Initial Corrosion Rate (mpy):</label>
+  <!-- Input Controls -->
+  <div class="controls-container">
+    <div class="controls-grid">
+      <div class="input-group">
+        <label for="initialRate" class="input-label">Initial Corrosion Rate (mpy)</label>
         <input 
           type="text" 
           id="initialRate" 
-          class="px-3 py-2 border rounded" 
+          class="form-input" 
           placeholder="e.g. 1.5" 
           [value]="initialRate()"
           (input)="onInputChange('initialRate', $event)" />
       </div>
-      <div>
-        <label for="startDate" class="mr-2 font-medium">Start Date:</label>
+      <div class="input-group">
+        <label for="startDate" class="input-label">Start Date</label>
         <input 
           type="date" 
           id="startDate" 
-          class="px-3 py-2 border rounded"
+          class="form-input"
           [value]="startDate()"
           (input)="onInputChange('startDate', $event)" />
       </div>
-      <div>
-        <label for="endDate" class="mr-2 font-medium">End Date:</label>
+      <div class="input-group">
+        <label for="endDate" class="input-label">End Date</label>
         <input 
           type="date" 
           id="endDate" 
-          class="px-3 py-2 border rounded"
+          class="form-input"
           [value]="endDate()"
           (input)="onInputChange('endDate', $event)" />
       </div>
     </div>
+  </div>
 
-    <!-- Sankey Chart -->
+  <!-- Sankey Chart -->
+  <div class="chart-container">
     <app-sankey-chart 
       (linkClick)="onLinkClick($event)">
     </app-sankey-chart>

@@ -1,0 +1,13 @@
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/repository/TmlRepository.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/TmlCorrosionApplication.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/config/CorsConfig.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/controller/MeasurementController.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/config/ActuatorConfig.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/entity/Measurement.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/repository/ClassificationRepository.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/controller/TmlController.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/entity/Tml.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/repository/MeasurementRepository.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/entity/Classification.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/controller/CorrosionDataController.java
+/Users/rlrahul/Trajectra/tml-corrosion-angular/backend/src/main/java/com/trajectra/tmlcorrosion/controller/ClassificationController.java

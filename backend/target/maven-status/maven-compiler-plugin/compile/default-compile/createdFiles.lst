@@ -1,0 +1,13 @@
+com/trajectra/tmlcorrosion/repository/TmlRepository.class
+com/trajectra/tmlcorrosion/controller/MeasurementController.class
+com/trajectra/tmlcorrosion/config/CorsConfig.class
+com/trajectra/tmlcorrosion/config/ActuatorConfig.class
+com/trajectra/tmlcorrosion/TmlCorrosionApplication.class
+com/trajectra/tmlcorrosion/repository/MeasurementRepository.class
+com/trajectra/tmlcorrosion/controller/TmlController.class
+com/trajectra/tmlcorrosion/entity/Tml.class
+com/trajectra/tmlcorrosion/repository/ClassificationRepository.class
+com/trajectra/tmlcorrosion/controller/CorrosionDataController.class
+com/trajectra/tmlcorrosion/entity/Classification.class
+com/trajectra/tmlcorrosion/controller/ClassificationController.class
+com/trajectra/tmlcorrosion/entity/Measurement.class

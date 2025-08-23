@@ -1,0 +1,85 @@
+<div class="main-container">
+  
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">TML Corrosion Analysis - TRAJECTRA</h1>
+  </div>
+
+  <!-- Main Content with Sidebar Layout -->
+  <div class="content-layout">
+    <!-- Left Sidebar with Filters -->
+    <div class="sidebar-filters">
+      <h2 class="filters-title">Data Filters</h2>
+      <div class="filter-controls">
+        <!-- Block 1: Initial Criteria -->
+        <div class="filter-block">
+          <h3 class="block-title">Initial Criteria</h3>
+          <div class="input-group">
+            <label for="startDate" class="input-label">Start Date</label>
+            <select 
+              id="startDate" 
+              class="form-input"
+              [value]="startDate()"
+              (change)="onInputChange('startDate', $event)">
+              <option value="" disabled>Select start date</option>
+              @for (date of availableDates(); track date) {
+                <option [value]="date">{{ date }}</option>
+              }
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="initialRate" class="input-label">Max Corrosion Rate</label>
+            <input 
+              type="text" 
+              id="initialRate" 
+              class="form-input" 
+              placeholder="Enter value in mpy" 
+              [value]="initialRate()"
+              (input)="onInputChange('initialRate', $event)" />
+            <span class="input-unit">mils/year</span>
+          </div>
+        </div>
+
+        <!-- Block 2: End Date -->
+        <div class="filter-block">
+          <h3 class="block-title">Tracking Target</h3>
+          <div class="input-group">
+            <label for="endDate" class="input-label">End Date</label>
+            <select 
+              id="endDate" 
+              class="form-input"
+              [value]="endDate()"
+              (change)="onInputChange('endDate', $event)">
+              <option value="" disabled>Select end date</option>
+              @for (date of availableDates(); track date) {
+                <option [value]="date">{{ date }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sankey Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <p class="chart-description">
+          {{getTotalTmlCount()}} TMLs with CR ≤ {{initialRate()}} mpy ({{startDate()}}) flowing to corrosion rate categories by {{endDate()}}. Click on any flow to view detailed TML and circuit information.
+        </p>
+      </div>
+      <app-sankey-chart 
+        (linkClick)="onLinkClick($event)">
+      </app-sankey-chart>
+    </div>
+  </div>
+
+  <!-- TML Modal -->
+  <app-tml-modal 
+    [isVisible]="isModalVisible()" 
+    [tmlData]="selectedTmlData()" 
+    (close)="closeModal()">
+  </app-tml-modal>
+</div>
+
+
+<router-outlet />

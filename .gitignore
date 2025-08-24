@@ -43,3 +43,7 @@ Thumbs.db
 
 # Claude Code configuration
 .claude/
+
+# Maven
+target/
+*.class

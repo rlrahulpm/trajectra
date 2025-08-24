@@ -4,14 +4,19 @@
   <div class="page-header">
     <h1 class="page-title">
       <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 12L4 10L8 14L14 8L16 10L22 4" stroke="url(#gradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="4" cy="10" r="2" fill="url(#gradient)"/>
-        <circle cx="8" cy="14" r="2" fill="url(#gradient)"/>
-        <circle cx="14" cy="8" r="2" fill="url(#gradient)"/>
-        <circle cx="16" cy="10" r="2" fill="url(#gradient)"/>
-        <circle cx="22" cy="4" r="2" fill="url(#gradient)"/>
-        <path d="M2 20H22" stroke="url(#gradient)" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M2 4V20" stroke="url(#gradient)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="5" cy="5" r="2" fill="url(#gradient)"/>
+        <circle cx="19" cy="5" r="2" fill="url(#gradient)"/>
+        <circle cx="5" cy="19" r="2" fill="url(#gradient)"/>
+        <circle cx="19" cy="19" r="2" fill="url(#gradient)"/>
+        <circle cx="12" cy="12" r="3" stroke="url(#gradient)" stroke-width="2" fill="none"/>
+        <path d="M7 5H17" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M5 7V17" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M19 7V17" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M7 19H17" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M7.5 7.5L9.5 9.5" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M16.5 7.5L14.5 9.5" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M7.5 16.5L9.5 14.5" stroke="url(#gradient)" stroke-width="2"/>
+        <path d="M16.5 16.5L14.5 14.5" stroke="url(#gradient)" stroke-width="2"/>
         <defs>
           <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#4a90e2"/>
@@ -86,6 +91,8 @@
         </p>
       </div>
       <app-sankey-chart 
+        [availableMonths]="availableMonths()"
+        [selectedEndMonth]="selectedEndMonth()"
         (linkClick)="onLinkClick($event)"
         (nodeExpand)="onNodeExpand($event)"
         (backClick)="onBackClick()">
@@ -97,6 +104,7 @@
   <app-tml-modal 
     [isVisible]="isModalVisible()" 
     [tmlData]="selectedTmlData()" 
+    [selectedDates]="selectedModalDates()"
     (close)="closeModal()">
   </app-tml-modal>
 </div>

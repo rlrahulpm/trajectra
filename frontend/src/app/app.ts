@@ -18,11 +18,13 @@ export class App implements OnInit {
   protected readonly currentData = signal<CorrosionData | null>(null);
   protected readonly isModalVisible = signal(false);
   protected readonly selectedTmlData = signal<TmlData | null>(null);
+  protected readonly selectedModalDates = signal<{start: string, end: string} | null>(null);
   protected readonly availableDates = signal<string[]>([]);
   protected readonly availableMonths = signal<string[]>([]);
   protected readonly selectedStartMonth = signal('');
   protected readonly selectedEndMonth = signal('');
   private dateToMonthMap = new Map<string, string[]>(); // month -> [dates]
+  private expandedMonthContext: {start: string, end: string} | null = null; // Track expanded view context
 
   // Computed signal for available end months (excludes start month and earlier months)
   protected readonly availableEndMonths = computed(() => {
@@ -191,6 +193,40 @@ export class App implements OnInit {
 
   onLinkClick(tmlData: TmlData): void {
     this.selectedTmlData.set(tmlData);
+    
+    // Use expanded context if we're in expanded view, otherwise use regular filter
+    let startMonth: string;
+    let endMonth: string;
+    
+    if (this.expandedMonthContext) {
+      // We're in expanded view (e.g., February to March)
+      startMonth = this.expandedMonthContext.start;
+      endMonth = this.expandedMonthContext.end;
+    } else {
+      // We're in regular view (e.g., January to February)
+      startMonth = this.selectedStartMonth();
+      endMonth = this.selectedEndMonth();
+    }
+    
+    if (startMonth && endMonth) {
+      // Convert month names to date format (e.g., 'January' -> '2025-01')
+      const startDates = this.dateToMonthMap.get(startMonth) || [];
+      const endDates = this.dateToMonthMap.get(endMonth) || [];
+      
+      if (startDates.length > 0 && endDates.length > 0) {
+        // Use the first date of each month to extract year-month
+        const startYearMonth = startDates[0].substring(0, 7); // e.g., '2025-01'
+        const endYearMonth = endDates[0].substring(0, 7);     // e.g., '2025-02'
+        
+        this.selectedModalDates.set({
+          start: startYearMonth,
+          end: endYearMonth
+        });
+        console.log('Modal dates set:', {start: startYearMonth, end: endYearMonth}, 
+                    'from months:', startMonth, 'to', endMonth);
+      }
+    }
+    
     this.isModalVisible.set(true);
   }
 
@@ -199,6 +235,7 @@ export class App implements OnInit {
     
     // Get the next month after the current end month for drill-down
     const currentEndMonth = this.selectedEndMonth();
+    const currentStartMonth = this.selectedStartMonth();
     const monthOrder = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -213,6 +250,13 @@ export class App implements OnInit {
       if (nextDates && nextDates.length > 0) {
         const nextDate = nextDates[0];
         console.log('Expanding to next month:', nextMonth, 'Date:', nextDate);
+        
+        // When expanding, the new view is from currentEndMonth to nextMonth
+        // Store this expanded context for modal usage
+        this.expandedMonthContext = {
+          start: currentEndMonth,
+          end: nextMonth
+        };
         
         // Request expanded Sankey data
         this.corrosionDataService.generateExpandedSankeyData(
@@ -231,6 +275,8 @@ export class App implements OnInit {
 
   onBackClick(): void {
     console.log('Back button clicked - returning to original view');
+    // Clear expanded context when returning to original view
+    this.expandedMonthContext = null;
     // Return to the original temporal tracking view
     this.updateChart();
   }
@@ -238,6 +284,7 @@ export class App implements OnInit {
   closeModal(): void {
     this.isModalVisible.set(false);
     this.selectedTmlData.set(null);
+    this.selectedModalDates.set(null);
   }
 
   getTotalTmlCount(): number {

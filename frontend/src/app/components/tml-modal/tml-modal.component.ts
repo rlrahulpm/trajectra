@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, Renderer2, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import { TmlData } from '../../models/corrosion-data.interface';
 import { CorrosionDataService } from '../../services/corrosion-data.service';
 import { HttpClient } from '@angular/common/http';
@@ -12,9 +13,11 @@ import { HttpClient } from '@angular/common/http';
     <div 
       *ngIf="isVisible" 
       class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center"
+      style="z-index: 999999 !important; position: fixed !important;"
       (click)="closeModal()">
       <div 
         class="modal-content"
+        style="z-index: 1000000 !important; position: relative !important;"
         (click)="$event.stopPropagation()">
         
         <!-- Header -->
@@ -77,7 +80,7 @@ import { HttpClient } from '@angular/common/http';
     </div>
   `
 })
-export class TmlModalComponent implements OnChanges {
+export class TmlModalComponent implements OnChanges, OnDestroy {
   @Input() isVisible = false;
   @Input() tmlData: TmlData | null = null;
   @Input() selectedDates: {start: string, end: string} | null = null; // e.g., {start: '2025-01', end: '2025-02'}
@@ -91,13 +94,25 @@ export class TmlModalComponent implements OnChanges {
 
   constructor(
     private corrosionDataService: CorrosionDataService,
-    private http: HttpClient
+    private http: HttpClient,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   async ngOnChanges() {
-    if (this.isVisible && this.tmlData) {
-      await this.generateAiInsights();
+    if (this.isVisible) {
+      this.renderer.addClass(this.document.body, 'modal-open');
+      if (this.tmlData) {
+        await this.generateAiInsights();
+      }
+    } else {
+      this.renderer.removeClass(this.document.body, 'modal-open');
     }
+  }
+
+  ngOnDestroy() {
+    // Clean up body class if component is destroyed while modal is open
+    this.renderer.removeClass(this.document.body, 'modal-open');
   }
 
   getCircuitEntries(): Array<{key: string, value: string[]}> {
@@ -106,6 +121,7 @@ export class TmlModalComponent implements OnChanges {
   }
 
   closeModal(): void {
+    this.renderer.removeClass(this.document.body, 'modal-open');
     this.close.emit();
   }
 

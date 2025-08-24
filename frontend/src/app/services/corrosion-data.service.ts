@@ -13,7 +13,7 @@ export class CorrosionDataService {
   private apiLoaded = false;
 
   constructor(private http: HttpClient) {
-    this.loadApiData();
+    // Don't load default data - wait for filter parameters from the component
   }
 
   private async loadApiData(): Promise<void> {
@@ -85,7 +85,7 @@ export class CorrosionDataService {
     
     // Create nodes for the Sankey diagram
     const nodes = [
-      { name: `TMLs with CR ≤ ${maxCorrosionRate} mpy (${startDate})` },
+      { name: `TMLs with <= ${maxCorrosionRate} mpy corrosion rate as on ${startDate}` },
       { name: "< 10 mpy" },
       { name: "10-20 mpy" },
       { name: "20-30 mpy" },
@@ -132,6 +132,16 @@ export class CorrosionDataService {
           tmlData[circuitId].push(tmlId);
         });
 
+        // Sort TML IDs within each circuit
+        Object.keys(tmlData).forEach(circuit => {
+          tmlData[circuit].sort((a, b) => {
+            // Extract numeric part from TML ID for proper sorting
+            const numA = parseInt(a.replace(/\D/g, ''), 10);
+            const numB = parseInt(b.replace(/\D/g, ''), 10);
+            return numA - numB;
+          });
+        });
+
         links.push({
           source: 0,
           target: targetIndex,
@@ -140,6 +150,9 @@ export class CorrosionDataService {
         });
       }
     });
+
+    // Sort links by target index to ensure correct order in Sankey diagram
+    links.sort((a, b) => a.target - b.target);
 
     const sankeyData = { nodes, links };
     console.log('Generated temporal Sankey data:', sankeyData);
@@ -159,7 +172,7 @@ export class CorrosionDataService {
         // Generate empty Sankey data
         const emptyData = {
           nodes: [
-            { name: `TMLs with CR ≤ ${maxCorrosionRate} mpy (${startDate})` },
+            { name: `TMLs with <= ${maxCorrosionRate} mpy corrosion rate as on ${startDate}` },
             { name: "< 10 mpy" },
             { name: "10-20 mpy" },
             { name: "20-30 mpy" },

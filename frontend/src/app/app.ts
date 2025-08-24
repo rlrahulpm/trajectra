@@ -23,6 +23,11 @@ export class App implements OnInit {
   constructor(private corrosionDataService: CorrosionDataService) {}
 
   async ngOnInit(): Promise<void> {
+    // Subscribe to data changes first
+    this.corrosionDataService.data$.subscribe(data => {
+      this.currentData.set(data);
+    });
+    
     // Load available dates from backend
     try {
       const dates = await this.corrosionDataService.getAvailableDates();
@@ -42,12 +47,7 @@ export class App implements OnInit {
       this.endDate.set('2025-03-31');
     }
     
-    // Subscribe to data changes
-    this.corrosionDataService.data$.subscribe(data => {
-      this.currentData.set(data);
-    });
-    
-    // Initial data load with default rate
+    // Initial data load with default rate - now dates are guaranteed to be set
     this.updateChart();
   }
 

@@ -110,6 +110,7 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
     console.log('Generated graph:', graph);
 
     // Create links
+    const component = this; // Store reference to component
     this.svg.append("g")
       .selectAll("path")
       .data(graph.links)
@@ -119,18 +120,26 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
       .attr("stroke-width", (d: any) => Math.max(1, d.width))
       .attr("stroke", (d: any) => this.getLinkColor(d.target.name))
       .style("cursor", "pointer")
-      .attr("stroke-opacity", "0.5")
+      .attr("stroke-opacity", "0.15")
       .style("pointer-events", "all")
-      .on("mouseover", function(this: SVGPathElement) {
-        console.log("Link hovered!");
-        d3.select(this).classed("hovered", true);
+      .on("mouseover", function(this: SVGPathElement, event: MouseEvent, d: any) {
+        console.log("Link hovered!", d.target.name);
+        const selection = d3.select(this);
+        // Apply destination color with increased opacity using style() for higher precedence
+        const targetColor = component.getLinkColor(d.target.name);
+        console.log("Applying hover color:", targetColor);
+        selection
+          .style("stroke", targetColor)
+          .style("stroke-opacity", "0.8");
       })
-      .on("mouseout", function(this: SVGPathElement) {
+      .on("mouseout", function(this: SVGPathElement, event: MouseEvent, d: any) {
         console.log("Link mouseout!");
-        d3.select(this).classed("hovered", false);
-      })
-      .each((d: any, i: number, nodes: any[]) => {
-        (nodes[i] as any).__component__ = this;
+        const selection = d3.select(this);
+        // Restore original state
+        const targetColor = component.getLinkColor(d.target.name);
+        selection
+          .style("stroke", targetColor)
+          .style("stroke-opacity", "0.15");
       })
       .on("click", (event: any, d: SankeyLink) => {
         if (d.tmls) {

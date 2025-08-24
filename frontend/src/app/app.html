@@ -15,15 +15,15 @@
         <div class="filter-block">
           <h3 class="block-title">Initial Criteria</h3>
           <div class="input-group">
-            <label for="startDate" class="input-label">Start Date</label>
+            <label for="startMonth" class="input-label">Start Month</label>
             <select 
-              id="startDate" 
+              id="startMonth" 
               class="form-input"
-              [value]="startDate()"
-              (change)="onInputChange('startDate', $event)">
-              <option value="" disabled>Select start date</option>
-              @for (date of availableDates(); track date) {
-                <option [value]="date">{{ date }}</option>
+              [value]="selectedStartMonth()"
+              (change)="onInputChange('startMonth', $event)">
+              <option value="" disabled>Select start month</option>
+              @for (month of availableMonths(); track month) {
+                <option [value]="month">{{ month }}</option>
               }
             </select>
           </div>
@@ -44,15 +44,15 @@
         <div class="filter-block">
           <h3 class="block-title">Tracking Target</h3>
           <div class="input-group">
-            <label for="endDate" class="input-label">End Date</label>
+            <label for="endMonth" class="input-label">End Month</label>
             <select 
-              id="endDate" 
+              id="endMonth" 
               class="form-input"
-              [value]="endDate()"
-              (change)="onInputChange('endDate', $event)">
-              <option value="" disabled>Select end date</option>
-              @for (date of availableDates(); track date) {
-                <option [value]="date">{{ date }}</option>
+              [value]="selectedEndMonth()"
+              (change)="onInputChange('endMonth', $event)">
+              <option value="" disabled>Select end month</option>
+              @for (month of availableMonths(); track month) {
+                <option [value]="month">{{ month }}</option>
               }
             </select>
           </div>
@@ -64,7 +64,7 @@
     <div class="chart-container">
       <div class="chart-header">
         <p class="chart-description">
-          {{getTotalTmlCount()}} TMLs with CR ≤ {{initialRate()}} mpy ({{startDate()}}) flowing to corrosion rate categories by {{endDate()}}. Click on any flow to view detailed TML and circuit information.
+          {{getTotalTmlCount()}} TMLs with CR ≤ {{initialRate()}} mpy ({{selectedStartMonth()}}) flowing to corrosion rate categories by {{selectedEndMonth()}}. Click on any flow to view detailed TML and circuit information.
         </p>
       </div>
       <app-sankey-chart 

@@ -109,6 +109,30 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
     
     console.log('Generated graph:', graph);
 
+    // Create gradients for links
+    const defs = this.svg.append("defs");
+    
+    // Create a gradient for each link
+    const gradients = defs.selectAll("linearGradient")
+      .data(graph.links)
+      .join("linearGradient")
+      .attr("id", (d: any, i: number) => `gradient-${i}`)
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", (d: any) => d.source.x1)
+      .attr("y1", (d: any) => (d.source.y0 + d.source.y1) / 2)
+      .attr("x2", (d: any) => d.target.x0)
+      .attr("y2", (d: any) => (d.target.y0 + d.target.y1) / 2);
+
+    // Add gradient stops
+    gradients.selectAll("stop")
+      .data((d: any) => [
+        { offset: "0%", color: this.getNodeColor(d.source.name) },
+        { offset: "100%", color: this.getLinkColor(d.target.name) }
+      ])
+      .join("stop")
+      .attr("offset", (d: any) => d.offset)
+      .attr("stop-color", (d: any) => d.color);
+
     // Create links
     const component = this; // Store reference to component
     this.svg.append("g")
@@ -118,28 +142,21 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
       .attr("class", "link")
       .attr("d", sankeyLinkHorizontal())
       .attr("stroke-width", (d: any) => Math.max(1, d.width))
-      .attr("stroke", (d: any) => this.getLinkColor(d.target.name))
+      .attr("stroke", (d: any, i: number) => `url(#gradient-${i})`)
       .style("cursor", "pointer")
       .attr("stroke-opacity", "0.15")
       .style("pointer-events", "all")
       .on("mouseover", function(this: SVGPathElement, event: MouseEvent, d: any) {
         console.log("Link hovered!", d.target.name);
         const selection = d3.select(this);
-        // Apply destination color with increased opacity using style() for higher precedence
-        const targetColor = component.getLinkColor(d.target.name);
-        console.log("Applying hover color:", targetColor);
-        selection
-          .style("stroke", targetColor)
-          .style("stroke-opacity", "0.8");
+        // On hover, just increase opacity to highlight the gradient
+        selection.style("stroke-opacity", "0.6");
       })
       .on("mouseout", function(this: SVGPathElement, event: MouseEvent, d: any) {
         console.log("Link mouseout!");
         const selection = d3.select(this);
-        // Restore original state
-        const targetColor = component.getLinkColor(d.target.name);
-        selection
-          .style("stroke", targetColor)
-          .style("stroke-opacity", "0.15");
+        // Restore original opacity
+        selection.style("stroke-opacity", "0.15");
       })
       .on("click", (event: any, d: SankeyLink) => {
         if (d.tmls) {

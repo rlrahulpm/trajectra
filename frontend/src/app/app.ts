@@ -19,6 +19,10 @@ export class App implements OnInit {
   protected readonly isModalVisible = signal(false);
   protected readonly selectedTmlData = signal<TmlData | null>(null);
   protected readonly availableDates = signal<string[]>([]);
+  protected readonly availableMonths = signal<string[]>([]);
+  protected readonly selectedStartMonth = signal('');
+  protected readonly selectedEndMonth = signal('');
+  private dateToMonthMap = new Map<string, string[]>(); // month -> [dates]
 
   constructor(private corrosionDataService: CorrosionDataService) {}
 
@@ -34,17 +38,30 @@ export class App implements OnInit {
       console.log('Loaded available dates:', dates);
       this.availableDates.set(dates);
       
+      // Process dates to extract unique months
+      this.processDatesByMonth(dates);
+      
       // Set initial dates to first and last available dates if they exist
       if (dates.length > 0) {
         this.startDate.set(dates[0]);
         this.endDate.set(dates[dates.length - 1]);
+        
+        // Set initial months
+        const startMonth = this.getMonthName(dates[0]);
+        const endMonth = this.getMonthName(dates[dates.length - 1]);
+        this.selectedStartMonth.set(startMonth);
+        this.selectedEndMonth.set(endMonth);
+        
         console.log('Set initial dates:', dates[0], 'to', dates[dates.length - 1]);
+        console.log('Set initial months:', startMonth, 'to', endMonth);
       }
     } catch (error) {
       console.error('Error loading available dates:', error);
       // Fallback to default dates
       this.startDate.set('2025-01-01');
       this.endDate.set('2025-03-31');
+      this.selectedStartMonth.set('January');
+      this.selectedEndMonth.set('March');
     }
     
     // Initial data load with default rate - now dates are guaranteed to be set
@@ -64,6 +81,22 @@ export class App implements OnInit {
         break;
       case 'endDate':
         this.endDate.set(value);
+        break;
+      case 'startMonth':
+        this.selectedStartMonth.set(value);
+        // Find first date for this month and set it
+        const startDates = this.dateToMonthMap.get(value);
+        if (startDates && startDates.length > 0) {
+          this.startDate.set(startDates[0]);
+        }
+        break;
+      case 'endMonth':
+        this.selectedEndMonth.set(value);
+        // Find first date for this month and set it
+        const endDates = this.dateToMonthMap.get(value);
+        if (endDates && endDates.length > 0) {
+          this.endDate.set(endDates[0]);
+        }
         break;
     }
     
@@ -102,6 +135,38 @@ export class App implements OnInit {
       }
       return total;
     }, 0);
+  }
+
+  private processDatesByMonth(dates: string[]): void {
+    this.dateToMonthMap.clear();
+    
+    // Group dates by month
+    dates.forEach(date => {
+      const monthName = this.getMonthName(date);
+      if (!this.dateToMonthMap.has(monthName)) {
+        this.dateToMonthMap.set(monthName, []);
+      }
+      this.dateToMonthMap.get(monthName)!.push(date);
+    });
+    
+    // Get unique months and sort chronologically
+    const monthOrder = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const uniqueMonths = Array.from(this.dateToMonthMap.keys())
+      .sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+    
+    this.availableMonths.set(uniqueMonths);
+    
+    console.log('Processed months (chronological):', uniqueMonths);
+    console.log('Month to date mapping:', this.dateToMonthMap);
+  }
+
+  private getMonthName(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', { month: 'long' });
   }
 
 }

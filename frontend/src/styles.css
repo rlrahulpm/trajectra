@@ -138,7 +138,7 @@ button:hover {
   vertical-align: middle;
 }
 
-/* Download button with material icon */
+/* Download button with properly spaced icon */
 .download-btn {
   background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
   border: none;
@@ -160,11 +160,6 @@ button:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.download-btn::before {
-  content: "⬇";
-  font-size: 14px;
-  font-weight: bold;
-}
 
 /* Modal styles */
 .modal-content {
@@ -652,4 +647,593 @@ svg {
 
 .remove-target-btn:hover {
   background: #cf1322;
+}
+
+/* ============================================
+   BEAUTIFUL SUBTLE ANIMATIONS
+   ============================================ */
+
+/* Animated background gradient */
+.main-container {
+  position: relative;
+}
+
+.main-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(-45deg, 
+    rgba(74, 144, 226, 0.03), 
+    rgba(207, 19, 34, 0.02), 
+    rgba(139, 92, 246, 0.03), 
+    rgba(16, 185, 129, 0.02)
+  );
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Page entrance animation */
+.main-container > *:not(.page-header) {
+  animation: pageEnter 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.main-container > *:nth-child(2) { animation-delay: 0.1s; }
+.main-container > *:nth-child(3) { animation-delay: 0.2s; }
+.main-container > *:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes pageEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced header with subtle glow */
+.page-header {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  animation: headerSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+@keyframes headerSlideDown {
+  to { 
+    opacity: 1;
+    transform: translateY(0); 
+  }
+}
+
+.page-title {
+  animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+  from { 
+    filter: drop-shadow(0 2px 4px rgba(74, 144, 226, 0.2)); 
+  }
+  to { 
+    filter: drop-shadow(0 4px 8px rgba(207, 19, 34, 0.3)); 
+  }
+}
+
+/* Logo enhancement */
+.logo-icon {
+  animation: logoSpin 4s ease-in-out infinite;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+@keyframes logoSpin {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1;
+  }
+  25% { 
+    transform: scale(1.1) rotate(5deg); 
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.05) rotate(0deg); 
+    opacity: 1;
+  }
+  75% { 
+    transform: scale(1.1) rotate(-5deg); 
+    opacity: 1;
+  }
+}
+
+/* Sidebar slide-in animation */
+.sidebar-filters {
+  animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform: translateX(-100%);
+}
+
+@keyframes slideInLeft {
+  to { transform: translateX(0); }
+}
+
+/* Filter blocks staggered animation */
+.filter-block {
+  animation: filterSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.filter-block:nth-child(1) { animation-delay: 0.1s; }
+.filter-block:nth-child(2) { animation-delay: 0.2s; }
+.filter-block:nth-child(3) { animation-delay: 0.3s; }
+.filter-block:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes filterSlideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced filter block hover */
+.filter-block {
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(74, 144, 226, 0.1), 
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.filter-block:hover::before {
+  left: 100%;
+}
+
+/* Chart container slide-in */
+.chart-container {
+  animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+@keyframes slideInRight {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced chart wrapper */
+.chart-wrapper {
+  position: relative;
+}
+
+.chart-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    transparent, 
+    rgba(74, 144, 226, 0.1), 
+    transparent
+  );
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.chart-wrapper:hover::before {
+  opacity: 1;
+}
+
+/* Button enhancements */
+button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
+  transform: translate(-50%, -50%);
+}
+
+button:active::before {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced form inputs */
+.form-input {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+.form-input:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 
+              0 8px 20px rgba(102, 126, 234, 0.15);
+}
+
+/* Modal entrance animation */
+.fixed.inset-0.bg-gray-900 {
+  animation: modalBackdropFadeIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+@keyframes modalBackdropFadeIn {
+  to { opacity: 1; }
+}
+
+.modal-content {
+  animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform: scale(0.9) translateY(-20px);
+  opacity: 0;
+}
+
+@keyframes modalSlideIn {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* AI notes magical effect */
+.ai-notes-box {
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(74, 144, 226, 0.05), 
+    rgba(139, 92, 246, 0.05)
+  );
+  border: 2px solid rgba(74, 144, 226, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.ai-notes-box::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    #4a90e2, 
+    #8b5cf6, 
+    #ec4899, 
+    #f59e0b, 
+    #4a90e2
+  );
+  background-size: 300% 300%;
+  border-radius: 10px;
+  opacity: 0.3;
+  z-index: -1;
+  animation: aiGlow 4s ease-in-out infinite;
+}
+
+@keyframes aiGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Circuit containers wave animation */
+.circuit-container {
+  animation: circuitWave 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.circuit-container:nth-child(1) { animation-delay: 0.1s; }
+.circuit-container:nth-child(2) { animation-delay: 0.2s; }
+.circuit-container:nth-child(3) { animation-delay: 0.3s; }
+.circuit-container:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes circuitWave {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TML items subtle float */
+.tml-item {
+  transition: all 0.3s ease;
+  animation: tmlFloat 4s ease-in-out infinite;
+}
+
+.tml-item:nth-child(even) { animation-delay: 2s; }
+
+@keyframes tmlFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+.tml-item:hover {
+  color: #4a90e2;
+  transform: translateX(8px) translateY(-2px);
+}
+
+/* Bullet points sparkle */
+.bullet-point {
+  background: linear-gradient(45deg, #4a90e2, #8b5cf6);
+  animation: bulletSparkle 3s ease-in-out infinite alternate;
+}
+
+@keyframes bulletSparkle {
+  from {
+    box-shadow: 0 0 4px rgba(74, 144, 226, 0.4);
+    transform: scale(1);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+    transform: scale(1.1);
+  }
+}
+
+/* Subtle floating sparkles */
+.page-header::after {
+  content: '✨';
+  position: absolute;
+  top: 20%;
+  right: 5%;
+  font-size: 12px;
+  animation: sparkleFloat 6s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes sparkleFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: translateY(-10px) rotate(180deg); 
+    opacity: 1; 
+  }
+}
+
+/* Main page - hide scrollbar */
+body, html {
+  overflow-x: hidden;
+}
+
+.main-container {
+  overflow-x: hidden;
+}
+
+/* Modal scrollbar - reduced saturation */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Performance optimization */
+.chart-wrapper, .modal-content, .sidebar-filters {
+  will-change: transform;
+}
+
+/* NO CSS ANIMATIONS - RESTORE ORIGINAL FUNCTIONALITY */
+
+/* Clean chart styles without interference */
+
+/* Back button - clean and properly positioned */
+.back-button {
+  position: absolute !important;
+  top: 10px !important;
+  left: 10px !important;
+  z-index: 10 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #333 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.back-button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(74, 144, 226, 0.3) !important;
+}
+
+/* Beautiful chart transition effects */
+.chart-wrapper {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-wrapper[data-transitioning="true"] {
+  opacity: 0.3;
+  transform: scale(0.95) rotateY(5deg);
+  filter: blur(4px) brightness(1.2);
+}
+
+.chart-wrapper[data-transitioning="false"] {
+  opacity: 1;
+  transform: scale(1) rotateY(0deg);
+  filter: blur(0px) brightness(1);
+}
+
+/* Add a shimmer effect during transition */
+.chart-wrapper[data-transitioning="true"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(74, 144, 226, 0.3),
+    rgba(139, 92, 246, 0.2),
+    transparent
+  );
+  animation: shimmerSweep 0.8s ease-in-out;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes shimmerSweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Beautiful chart entrance animations - the good stuff! */
+.chart-wrapper svg {
+  animation: chartSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+
+@keyframes chartSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+/* Staggered node entrance - this was the beautiful part! */
+.node {
+  animation: nodeAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.node:nth-child(1) { animation-delay: 0.1s; }
+.node:nth-child(2) { animation-delay: 0.15s; }
+.node:nth-child(3) { animation-delay: 0.2s; }
+.node:nth-child(4) { animation-delay: 0.25s; }
+.node:nth-child(5) { animation-delay: 0.3s; }
+.node:nth-child(6) { animation-delay: 0.35s; }
+
+@keyframes nodeAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth link drawing animation - the magical effect! */
+.link {
+  animation: linkReveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation-delay: 0.2s;
+}
+
+@keyframes linkReveal {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Beautiful AI loading spinner */
+.ai-loader {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  margin-bottom: -2px;
+  border: 2px solid rgba(74, 144, 226, 0.2);
+  border-top: 2px solid #4a90e2;
+  border-radius: 50%;
+  animation: aiLoaderSpin 1s linear infinite;
+}
+
+@keyframes aiLoaderSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Enhanced AI loading text animation */
+.ai-notes-text:has(.ai-loader) {
+  animation: aiTextPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiTextPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Clean node and link styles */
+
+/* Enhanced chart wrapper glow on interaction */
+.chart-wrapper:has(.expand-plus:hover) {
+  box-shadow: 0 8px 30px rgba(74, 144, 226, 0.2);
+  border-color: rgba(74, 144, 226, 0.3);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .expand-plus {
+    animation: none !important;
+  }
+  
+  .back-button {
+    animation: none !important;
+  }
 }

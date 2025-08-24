@@ -24,7 +24,7 @@ import { HttpClient } from '@angular/common/http';
             <button 
               (click)="downloadCsv()" 
               class="download-btn">
-              Download CSV
+              ⬇ Download CSV
             </button>
           </div>
         </div>
@@ -40,7 +40,7 @@ import { HttpClient } from '@angular/common/http';
                 {{aiInsights}}
               </p>
               <p class="ai-notes-text" *ngIf="loadingAiInsights">
-                <span class="loading-indicator">🔄</span> Analyzing temperature patterns and corrosion trends with AI...
+                <span class="ai-loader"></span> Analyzing temperature patterns and corrosion trends with AI...
               </p>
               <p class="ai-notes-text" *ngIf="!loadingAiInsights && !aiInsights">
                 Unable to generate AI insights at this time. Please try again later.
@@ -48,9 +48,9 @@ import { HttpClient } from '@angular/common/http';
             </div>
           </div>
 
-          <!-- TML & Circuit IDs Section -->
+          <!-- Circuits and TMLs Section -->
           <div class="circuit-group">
-            <h3 class="section-title">TML & Circuit IDs</h3>
+            <h3 class="section-title">Circuits and TMLs</h3>
             <div>
               <div *ngFor="let circuit of getCircuitEntries()" class="circuit-container">
                 <div class="circuit-title">{{circuit.key}}</div>

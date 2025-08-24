@@ -11,13 +11,11 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="chart-wrapper" style="position: relative;">
+    <div class="chart-wrapper" [attr.data-transitioning]="isTransitioning" style="position: relative;">
       <div #backButton 
            class="back-button" 
-           style="position: absolute; top: 10px; left: 10px; z-index: 10; display: none; cursor: pointer; background: rgba(255, 255, 255, 0.95); color: #333; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(0, 0, 0, 0.1); backdrop-filter: blur(8px); transition: all 0.2s ease;"
-           (click)="onBackClick()"
-           (mouseenter)="onBackButtonHover(true)"
-           (mouseleave)="onBackButtonHover(false)">
+           style="display: none;"
+           (click)="onBackClick()">
         ← Back
       </div>
       <svg #sankeyChart 
@@ -32,6 +30,8 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('sankeyChart', { static: true }) sankeyChart!: ElementRef<SVGElement>;
   @ViewChild('backButton', { static: true }) backButton!: ElementRef<HTMLDivElement>;
   @Input() data: CorrosionData | null = null;
+  @Input() availableMonths: string[] = [];
+  @Input() selectedEndMonth: string = '';
   @Output() linkClick = new EventEmitter<TmlData>();
   @Output() nodeExpand = new EventEmitter<{nodeData: any, tmlData: any[]}>();
   @Output() backClick = new EventEmitter<void>();
@@ -43,6 +43,7 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
   private dataSubscription: Subscription | null = null;
   private expandedNodes = new Set<string>(); // Track which nodes are expanded
   private isExpandedView = false; // Track if we're in expanded/drill-down view
+  public isTransitioning = false; // Track transition state for animations
 
   constructor(private corrosionDataService: CorrosionDataService) {}
 
@@ -177,8 +178,8 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
       .on("mouseover", function(this: SVGPathElement, event: MouseEvent, d: any) {
         console.log("Link hovered!", d.target.name);
         const selection = d3.select(this);
-        // On hover, just increase opacity to highlight the gradient
-        selection.style("stroke-opacity", "0.6");
+        // On hover, increase opacity to a more subtle level
+        selection.style("stroke-opacity", "0.35");
       })
       .on("mouseout", function(this: SVGPathElement, event: MouseEvent, d: any) {
         console.log("Link mouseout!");
@@ -300,43 +301,94 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
 
   private isExpandableNode(nodeData: any): boolean {
     // Only target bars (not source) with TML data can be expanded
-    const isExpandable = nodeData.index !== 0 && nodeData.value > 0;
-    console.log(`isExpandableNode for ${nodeData.name}: index=${nodeData.index}, value=${nodeData.value}, expandable=${isExpandable}`);
+    const hasData = nodeData.index !== 0 && nodeData.value > 0;
+    
+    // Check if we can expand further (if there's a next month available)
+    const canExpand = this.canExpandToNextMonth();
+    
+    // Restore original logic
+    const isExpandable = hasData && canExpand;
+    console.log(`isExpandableNode for ${nodeData.name}: index=${nodeData.index}, value=${nodeData.value}, canExpand=${canExpand}, expandable=${isExpandable}`);
     return isExpandable;
+  }
+
+  private canExpandToNextMonth(): boolean {
+    if (!this.availableMonths || this.availableMonths.length === 0) {
+      return false;
+    }
+
+    const monthOrder = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Find the last available month
+    const lastAvailableMonth = this.availableMonths[this.availableMonths.length - 1];
+
+    if (this.isExpandedView) {
+      // In expanded view, check target nodes for current month
+      const data = this.corrosionDataService.getData();
+      if (!data || !data.nodes) return false;
+
+      const targetNodes = data.nodes.filter(node => node.name.includes('(') && node.name !== data.nodes[0].name);
+      if (targetNodes.length > 0) {
+        const monthMatch = targetNodes[0].name.match(/\((.+)\)$/);
+        if (monthMatch) {
+          const currentMonth = monthMatch[1];
+          return currentMonth !== lastAvailableMonth;
+        }
+      }
+      return false;
+    } else {
+      // In main view, check if selected end month is the last available
+      return this.selectedEndMonth !== lastAvailableMonth;
+    }
   }
 
   private handleNodeExpand(nodeData: any): void {
     console.log('=== NODE EXPAND DEBUG ===');
     console.log('Node expand clicked:', nodeData);
-    console.log('Available graph links:', this.getCurrentGraphLinks().length);
     
-    // Find the link that connects to this node to get TML data
-    const connectedLink = this.getCurrentGraphLinks().find((link: any) => {
-      const isMatch = link.target === nodeData || link.target.index === nodeData.index;
-      console.log(`Checking link: source=${link.source?.index || link.source}, target=${link.target?.index || link.target}, match=${isMatch}`);
-      return isMatch;
-    });
+    // Start transition animation immediately
+    this.isTransitioning = true;
     
-    console.log('Connected link found:', !!connectedLink);
-    if (connectedLink) {
-      console.log('Link data:', connectedLink);
-      console.log('Has tmlData:', !!connectedLink.tmlData);
-      console.log('Has tmls:', !!connectedLink.tmls);
+    // Shorter delay for smoother transition like back button
+    setTimeout(() => {
+      console.log('Available graph links:', this.getCurrentGraphLinks().length);
       
-      if (connectedLink.tmlData) {
-        console.log('Expanding node with TML data:', connectedLink.tmlData.length, 'records');
+      // Find the link that connects to this node to get TML data
+      const connectedLink = this.getCurrentGraphLinks().find((link: any) => {
+        const isMatch = link.target === nodeData || link.target.index === nodeData.index;
+        console.log(`Checking link: source=${link.source?.index || link.source}, target=${link.target?.index || link.target}, match=${isMatch}`);
+        return isMatch;
+      });
+      
+      console.log('Connected link found:', !!connectedLink);
+      if (connectedLink) {
+        console.log('Link data:', connectedLink);
+        console.log('Has tmlData:', !!connectedLink.tmlData);
+        console.log('Has tmls:', !!connectedLink.tmls);
         
-        // Emit event to parent component with node data and TML data
-        this.nodeExpand.emit({
-          nodeData: nodeData,
-          tmlData: connectedLink.tmlData
-        });
+        if (connectedLink.tmlData) {
+          console.log('Expanding node with TML data:', connectedLink.tmlData.length, 'records');
+          
+          // Emit event to parent component with node data and TML data
+          this.nodeExpand.emit({
+            nodeData: nodeData,
+            tmlData: connectedLink.tmlData
+          });
+        } else {
+          console.log('No tmlData found in connected link');
+        }
       } else {
-        console.log('No tmlData found in connected link');
+        console.log('No connected link found for node');
       }
-    } else {
-      console.log('No connected link found for node');
-    }
+      
+      // Match back button timing for consistency
+      setTimeout(() => {
+        this.isTransitioning = false;
+      }, 400);
+    }, 100);
   }
 
   private getCurrentGraphLinks(): any[] {
@@ -349,13 +401,6 @@ export class SankeyChartComponent implements OnInit, OnDestroy, OnChanges {
     this.backClick.emit();
   }
 
-  public onBackButtonHover(isHovering: boolean): void {
-    if (isHovering) {
-      this.backButton.nativeElement.style.transform = 'translateY(-1px)';
-    } else {
-      this.backButton.nativeElement.style.transform = 'translateY(0px)';
-    }
-  }
 
   private currentGraphLinks: any[] = []; // Store current links
 }

@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SankeyChartComponent } from './components/sankey-chart/sankey-chart.component';
 import { TmlModalComponent } from './components/tml-modal/tml-modal.component';
@@ -24,6 +24,29 @@ export class App implements OnInit {
   protected readonly selectedEndMonth = signal('');
   private dateToMonthMap = new Map<string, string[]>(); // month -> [dates]
 
+  // Computed signal for available end months (excludes start month and earlier months)
+  protected readonly availableEndMonths = computed(() => {
+    const startMonth = this.selectedStartMonth();
+    const allMonths = this.availableMonths();
+    
+    if (!startMonth || allMonths.length === 0) {
+      return allMonths;
+    }
+    
+    const monthOrder = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const startMonthIndex = monthOrder.indexOf(startMonth);
+    
+    // Return only months that come after the start month
+    return allMonths.filter(month => {
+      const monthIndex = monthOrder.indexOf(month);
+      return monthIndex > startMonthIndex;
+    });
+  });
+
   constructor(private corrosionDataService: CorrosionDataService) {}
 
   async ngOnInit(): Promise<void> {
@@ -48,12 +71,36 @@ export class App implements OnInit {
         
         // Set initial months
         const startMonth = this.getMonthName(dates[0]);
-        const endMonth = this.getMonthName(dates[dates.length - 1]);
         this.selectedStartMonth.set(startMonth);
-        this.selectedEndMonth.set(endMonth);
         
-        console.log('Set initial dates:', dates[0], 'to', dates[dates.length - 1]);
-        console.log('Set initial months:', startMonth, 'to', endMonth);
+        // Find a valid end month that comes after start month
+        const monthOrder = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const startMonthIndex = monthOrder.indexOf(startMonth);
+        
+        // Find the first available month that comes after the start month
+        let validEndMonth = '';
+        for (const month of this.availableMonths()) {
+          const monthIndex = monthOrder.indexOf(month);
+          if (monthIndex > startMonthIndex) {
+            validEndMonth = month;
+            break;
+          }
+        }
+        
+        if (validEndMonth) {
+          this.selectedEndMonth.set(validEndMonth);
+          // Set the corresponding date
+          const endDates = this.dateToMonthMap.get(validEndMonth);
+          if (endDates && endDates.length > 0) {
+            this.endDate.set(endDates[0]);
+          }
+        }
+        
+        console.log('Set initial dates:', dates[0], 'to', this.endDate());
+        console.log('Set initial months:', startMonth, 'to', validEndMonth);
       }
     } catch (error) {
       console.error('Error loading available dates:', error);
@@ -89,6 +136,35 @@ export class App implements OnInit {
         if (startDates && startDates.length > 0) {
           this.startDate.set(startDates[0]);
         }
+        
+        // Check if current end month is still valid (comes after new start month)
+        const currentEndMonth = this.selectedEndMonth();
+        const monthOrder = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const newStartMonthIndex = monthOrder.indexOf(value);
+        const currentEndMonthIndex = monthOrder.indexOf(currentEndMonth);
+        
+        if (currentEndMonthIndex <= newStartMonthIndex) {
+          // Find the first available month after the new start month
+          let validEndMonth = '';
+          for (const month of this.availableMonths()) {
+            const monthIndex = monthOrder.indexOf(month);
+            if (monthIndex > newStartMonthIndex) {
+              validEndMonth = month;
+              break;
+            }
+          }
+          
+          if (validEndMonth) {
+            this.selectedEndMonth.set(validEndMonth);
+            const endDates = this.dateToMonthMap.get(validEndMonth);
+            if (endDates && endDates.length > 0) {
+              this.endDate.set(endDates[0]);
+            }
+          }
+        }
         break;
       case 'endMonth':
         this.selectedEndMonth.set(value);
@@ -118,6 +194,47 @@ export class App implements OnInit {
     this.isModalVisible.set(true);
   }
 
+  onNodeExpand(expandData: {nodeData: any, tmlData: any[]}): void {
+    console.log('Node expansion requested:', expandData);
+    
+    // Get the next month after the current end month for drill-down
+    const currentEndMonth = this.selectedEndMonth();
+    const monthOrder = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const currentEndMonthIndex = monthOrder.indexOf(currentEndMonth);
+    const nextMonth = monthOrder[currentEndMonthIndex + 1];
+    
+    if (nextMonth && this.availableMonths().includes(nextMonth)) {
+      // Find the date for the next month
+      const nextDates = this.dateToMonthMap.get(nextMonth);
+      if (nextDates && nextDates.length > 0) {
+        const nextDate = nextDates[0];
+        console.log('Expanding to next month:', nextMonth, 'Date:', nextDate);
+        
+        // Request expanded Sankey data
+        this.corrosionDataService.generateExpandedSankeyData(
+          this.startDate(),
+          this.endDate(),
+          nextDate,
+          parseFloat(this.initialRate()),
+          expandData.nodeData,
+          expandData.tmlData
+        );
+      }
+    } else {
+      console.log('No next month available for expansion');
+    }
+  }
+
+  onBackClick(): void {
+    console.log('Back button clicked - returning to original view');
+    // Return to the original temporal tracking view
+    this.updateChart();
+  }
+
   closeModal(): void {
     this.isModalVisible.set(false);
     this.selectedTmlData.set(null);
@@ -135,6 +252,59 @@ export class App implements OnInit {
       }
       return total;
     }, 0);
+  }
+
+  getChartDescription(): string {
+    const data = this.currentData();
+    if (!data || !data.nodes || data.nodes.length === 0) {
+      return 'Loading chart data...';
+    }
+
+    // Check if this is an expanded view (drill-down)
+    const isExpandedView = data.nodes.length > 0 && 
+      data.nodes[0].name.includes('TMLs from') && 
+      data.nodes[0].name.includes('category');
+
+    if (isExpandedView) {
+      // Extract information from the source node name
+      const sourceName = data.nodes[0].name;
+      // Example: "3 TMLs from 20-30 mpy category (February)"
+      const countMatch = sourceName.match(/(\d+) TMLs from (.+) category \((.+)\)/);
+      
+      if (countMatch) {
+        const count = countMatch[1];
+        const category = countMatch[2];
+        const fromMonth = countMatch[3];
+        
+        // Get the target month from the available end months or next month
+        const nextMonth = this.getNextMonth(fromMonth);
+        
+        return `${count} TMLs with corrosion rate of ${category} (${fromMonth}) flowing to corrosion rate categories by ${nextMonth}. Click on any flow to view detailed TML and circuit information.`;
+      }
+    }
+
+    // Default description for main view
+    const totalCount = this.getTotalTmlCount();
+    const rate = this.initialRate();
+    const startMonth = this.selectedStartMonth();
+    const endMonth = this.selectedEndMonth();
+
+    return `${totalCount} TMLs with CR ≤ ${rate} mpy (${startMonth}) flowing to corrosion rate categories by ${endMonth}. Click on any flow to view detailed TML and circuit information.`;
+  }
+
+  private getNextMonth(currentMonth: string): string {
+    const monthOrder = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const currentIndex = monthOrder.indexOf(currentMonth);
+    if (currentIndex >= 0 && currentIndex < monthOrder.length - 1) {
+      return monthOrder[currentIndex + 1];
+    }
+    
+    // Fallback to the selected end month if we can't determine the next month
+    return this.selectedEndMonth() || 'March';
   }
 
   private processDatesByMonth(dates: string[]): void {

@@ -23,7 +23,7 @@ import { CorrosionDataService } from '../../services/corrosion-data.service';
             <button 
               (click)="downloadCsv()" 
               class="download-btn">
-              📥 Download CSV
+              Download CSV
             </button>
           </div>
         </div>

@@ -24,4 +24,24 @@ public class TemporalController {
         
         return measurementRepository.findTemporalTracking(startDate, endDate, maxCorrosionRate);
     }
+    
+    @GetMapping("/tracking-specific")
+    public List<Map<String, Object>> getTemporalTrackingForSpecificTmls(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam String tmlIds) {
+        
+        // Parse comma-separated TML IDs
+        String[] idArray = tmlIds.split(",");
+        List<String> tmlIdList = new java.util.ArrayList<>();
+        
+        for (String id : idArray) {
+            String trimmedId = id.trim();
+            if (!trimmedId.isEmpty()) {
+                tmlIdList.add(trimmedId);
+            }
+        }
+        
+        return measurementRepository.findTemporalTrackingForSpecificTmls(startDate, endDate, tmlIdList);
+    }
 }

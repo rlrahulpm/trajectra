@@ -83,29 +83,7 @@ export class CorrosionDataService {
   private generateSankeyFromTemporalData(temporalData: any[], startDate: string, endDate: string, maxCorrosionRate: number): void {
     console.log('Generating Sankey from temporal data:', temporalData);
     
-    // Create nodes for the Sankey diagram
-    const nodes = [
-      { name: `TMLs with <= ${maxCorrosionRate} mpy corrosion rate as on ${startDate}` },
-      { name: "< 10 mpy" },
-      { name: "10-20 mpy" },
-      { name: "20-30 mpy" },
-      { name: "30-50 mpy" },
-      { name: "> 50 mpy" }
-    ];
-
-    // Create links from temporal tracking data
-    const links: any[] = [];
-    
-    // Group by end category
-    const categoryMap: { [key: string]: number } = {
-      '< 10 mpy': 1,
-      '10-20 mpy': 2, 
-      '20-30 mpy': 3,
-      '30-50 mpy': 4,
-      '> 50 mpy': 5
-    };
-
-    // Group TMLs by their end category
+    // Group TMLs by their end category first
     const categoryGroups: { [key: string]: any[] } = {};
     
     temporalData.forEach(record => {
@@ -116,10 +94,23 @@ export class CorrosionDataService {
       categoryGroups[category].push(record);
     });
 
-    // Create links for each category
-    Object.entries(categoryGroups).forEach(([category, records]) => {
-      const targetIndex = categoryMap[category];
-      if (targetIndex && records.length > 0) {
+    // Only create nodes and links for categories that have data
+    const nodes = [
+      { name: `TMLs with <= ${maxCorrosionRate} mpy corrosion rate as on ${startDate}` }
+    ];
+
+    const links: any[] = [];
+    const availableCategories = ["< 10 mpy", "10-20 mpy", "20-30 mpy", "30-50 mpy", "> 50 mpy"];
+    
+    let targetIndex = 1;
+    
+    // Only add nodes and links for categories that have data
+    availableCategories.forEach(category => {
+      const records = categoryGroups[category];
+      if (records && records.length > 0) {
+        // Add node for this category
+        nodes.push({ name: category });
+        
         // Create TML data for this category
         const tmlData: { [key: string]: string[] } = {};
         records.forEach(record => {
@@ -146,16 +137,16 @@ export class CorrosionDataService {
           source: 0,
           target: targetIndex,
           value: records.length,
-          tmls: tmlData
+          tmls: tmlData,
+          tmlData: records  // Add the raw temporal data for expansion
         });
+        
+        targetIndex++;
       }
     });
 
-    // Sort links by target index to ensure correct order in Sankey diagram
-    links.sort((a, b) => a.target - b.target);
-
     const sankeyData = { nodes, links };
-    console.log('Generated temporal Sankey data:', sankeyData);
+    console.log('Generated temporal Sankey data with only populated categories:', sankeyData);
     this.dataSubject.next(sankeyData);
   }
 
@@ -248,5 +239,207 @@ export class CorrosionDataService {
       console.error('Error loading temporal tracking data:', error);
       return [];
     }
+  }
+
+  async generateExpandedSankeyData(
+    startDate: string, 
+    endDate: string, 
+    expandToDate: string,
+    maxCorrosionRate: number, 
+    expandedNodeData: any, 
+    expandedTmlData: any[]
+  ): Promise<void> {
+    try {
+      console.log('=== GENERATING EXPANDED SANKEY ===');
+      console.log('Start:', startDate, 'End:', endDate, 'Expand to:', expandToDate);
+      console.log('Expanded node:', expandedNodeData);
+      console.log('TMLs to expand:', expandedTmlData.length);
+
+      // Get the original temporal data for start -> end
+      const originalData = await this.getTemporalTracking(startDate, endDate, maxCorrosionRate);
+      
+      // Get drill-down data for the specific TMLs from end -> expandToDate
+      console.log('TML data sample:', expandedTmlData[0]); // Debug: see what properties are available
+      const tmlIds = expandedTmlData.map(tml => tml.tmlId || tml.tmlid || tml.id);
+      console.log('Extracted TML IDs:', tmlIds);
+      console.log('Getting drill-down for TML IDs:', tmlIds.filter(id => id));
+      
+      // Try to get drill-down data for specific TMLs
+      let drillDownData: any[] = [];
+      const validTmlIds = tmlIds.filter(id => id);
+      
+      if (validTmlIds.length > 0) {
+        try {
+          console.log('Attempting to call specific TML endpoint...');
+          drillDownData = await this.getTemporalTrackingForSpecificTmls(endDate, expandToDate, validTmlIds);
+          console.log('Specific endpoint succeeded with', drillDownData.length, 'records');
+        } catch (error: any) {
+          console.log('Specific TML endpoint failed (404), using fallback approach');
+          console.log('Error:', error.status, error.statusText);
+          
+          // Fallback: Get all temporal data for the period and filter to specific TMLs
+          console.log('Fetching all temporal data for period:', endDate, 'to', expandToDate);
+          const allData = await this.getTemporalTracking(endDate, expandToDate, 999); // High rate to get all
+          console.log('Retrieved', allData.length, 'total records for filtering');
+          
+          drillDownData = allData.filter(record => {
+            const recordTmlId = record.tmlId || record.tmlid || record.id;
+            const isMatch = validTmlIds.includes(recordTmlId);
+            if (isMatch) {
+              console.log('Matched TML:', recordTmlId);
+            }
+            return isMatch;
+          });
+          console.log('Fallback filtered', drillDownData.length, 'records from', allData.length, 'total records');
+        }
+      }
+      
+      console.log('Drill-down data received:', drillDownData.length, 'records');
+
+      if (drillDownData.length > 0) {
+        this.generateExpandedSankeyFromData(originalData, drillDownData, startDate, endDate, expandToDate, maxCorrosionRate, expandedNodeData);
+      } else {
+        console.log('No drill-down data found, keeping original visualization');
+      }
+    } catch (error) {
+      console.error('Error generating expanded Sankey data:', error);
+    }
+  }
+
+  private async getTemporalTrackingForSpecificTmls(startDate: string, endDate: string, tmlIds: string[]): Promise<any[]> {
+    try {
+      const params = {
+        startDate,
+        endDate,
+        tmlIds: tmlIds.join(',')
+      };
+      return await firstValueFrom(this.http.get<any[]>(`${environment.apiUrl}/temporal/tracking-specific`, { params }));
+    } catch (error) {
+      console.error('Error loading specific TML tracking data:', error);
+      return [];
+    }
+  }
+
+  private generateExpandedSankeyFromData(
+    originalData: any[], 
+    drillDownData: any[], 
+    startDate: string, 
+    endDate: string, 
+    expandToDate: string,
+    maxCorrosionRate: number,
+    expandedNodeData: any
+  ): void {
+    console.log('Creating focused drill-down Sankey for specific category');
+
+    const endMonth = new Date(endDate).toLocaleString('en-US', { month: 'long' });
+    const expandMonth = new Date(expandToDate).toLocaleString('en-US', { month: 'long' });
+
+    // Get the expanded category name (e.g., "20-30 mpy")
+    const expandedCategoryName = this.getExpandedCategoryName(expandedNodeData);
+    const tmlCount = drillDownData.length;
+
+    // Create NEW 2-column Sankey focused on the clicked category
+    const nodes = [
+      { name: `${tmlCount} TMLs from ${expandedCategoryName} category (${endMonth})` }
+    ];
+
+    // Create links from the focused source to target categories
+    const links: any[] = [];
+    const expandedFlow = this.categorizeTemporalData(drillDownData);
+    
+    let targetIndex = 1;
+    const categoryNames = ["< 10 mpy", "10-20 mpy", "20-30 mpy", "30-50 mpy", "> 50 mpy"];
+    
+    // Only add nodes and links for categories that have data
+    categoryNames.forEach(category => {
+      const items = expandedFlow[category];
+      if (items && items.length > 0) {
+        // Add target node for this category
+        nodes.push({ name: `${category} (${expandMonth})` });
+        
+        // Create TML data for this category
+        const tmlData: { [key: string]: string[] } = {};
+        items.forEach(record => {
+          const circuitId = record.circuitId || record.circuitid;
+          const tmlId = record.tmlId || record.tmlid;
+          
+          if (!tmlData[circuitId]) {
+            tmlData[circuitId] = [];
+          }
+          tmlData[circuitId].push(tmlId);
+        });
+
+        // Sort TML IDs within each circuit
+        Object.keys(tmlData).forEach(circuit => {
+          tmlData[circuit].sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, ''), 10);
+            const numB = parseInt(b.replace(/\D/g, ''), 10);
+            return numA - numB;
+          });
+        });
+
+        links.push({
+          source: 0, // From the focused source
+          target: targetIndex,
+          value: items.length,
+          tmls: tmlData,
+          tmlData: items
+        });
+        
+        targetIndex++;
+      }
+    });
+
+    console.log('Created focused Sankey with', nodes.length, 'nodes (only populated categories)');
+
+    const sankeyData: CorrosionData = { nodes, links };
+    console.log('=== FOCUSED DRILL-DOWN SANKEY COMPLETE ===');
+    console.log('Source:', nodes[0].name);
+    console.log('Links:', links.length, 'categories with data');
+    this.dataSubject.next(sankeyData);
+  }
+
+  private categorizeTemporalData(temporalData: any[]): { [key: string]: any[] } {
+    const categoryFlow: { [key: string]: any[] } = {
+      "< 10 mpy": [],
+      "10-20 mpy": [],
+      "20-30 mpy": [],
+      "30-50 mpy": [],
+      "> 50 mpy": []
+    };
+
+    temporalData.forEach(item => {
+      // Handle different property name formats from backend
+      const rate = parseFloat(item.endCorrosionRate || item.endcorrosionrate);
+      
+      let category = "> 50 mpy";
+      if (rate < 10) category = "< 10 mpy";
+      else if (rate < 20) category = "10-20 mpy";
+      else if (rate < 30) category = "20-30 mpy";
+      else if (rate < 50) category = "30-50 mpy";
+      
+      categoryFlow[category].push(item);
+    });
+    return categoryFlow;
+  }
+
+  private getExpandedNodeCategoryIndex(nodeData: any): number {
+    const nodeName = nodeData.name || '';
+    if (nodeName.includes("< 10")) return 0;
+    if (nodeName.includes("10-20")) return 1;
+    if (nodeName.includes("20-30")) return 2;
+    if (nodeName.includes("30-50")) return 3;
+    if (nodeName.includes("> 50")) return 4;
+    return -1;
+  }
+
+  private getExpandedCategoryName(nodeData: any): string {
+    const nodeName = nodeData.name || '';
+    if (nodeName.includes("< 10")) return "< 10 mpy";
+    if (nodeName.includes("10-20")) return "10-20 mpy";
+    if (nodeName.includes("20-30")) return "20-30 mpy";
+    if (nodeName.includes("30-50")) return "30-50 mpy";
+    if (nodeName.includes("> 50")) return "> 50 mpy";
+    return "Unknown Category";
   }
 }

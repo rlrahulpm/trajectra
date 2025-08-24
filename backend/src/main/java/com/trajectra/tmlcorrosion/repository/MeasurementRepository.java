@@ -48,4 +48,31 @@ public interface MeasurementRepository extends JpaRepository<Measurement, Long> 
         @Param("endDate") LocalDate endDate,
         @Param("maxCorrosionRate") Double maxCorrosionRate
     );
+    
+    @Query(value = """
+        SELECT 
+            start.tml_record_id as tmlRecordId,
+            tml.circuit_id as circuitId,
+            tml.tml_id as tmlId,
+            start.corrosion_rate as startCorrosionRate,
+            finish.corrosion_rate as endCorrosionRate,
+            CASE 
+                WHEN finish.corrosion_rate < 10 THEN '< 10 mpy'
+                WHEN finish.corrosion_rate >= 10 AND finish.corrosion_rate < 20 THEN '10-20 mpy'
+                WHEN finish.corrosion_rate >= 20 AND finish.corrosion_rate < 30 THEN '20-30 mpy'
+                WHEN finish.corrosion_rate >= 30 AND finish.corrosion_rate < 50 THEN '30-50 mpy'
+                ELSE '> 50 mpy'
+            END as endCategory
+        FROM measurements start
+        JOIN measurements finish ON start.tml_record_id = finish.tml_record_id
+        JOIN tmls tml ON start.tml_record_id = tml.id
+        WHERE start.measurement_date = :startDate
+        AND finish.measurement_date = :endDate
+        AND tml.tml_id IN :tmlIds
+        """, nativeQuery = true)
+    List<Map<String, Object>> findTemporalTrackingForSpecificTmls(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate,
+        @Param("tmlIds") List<String> tmlIds
+    );
 }

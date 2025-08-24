@@ -1023,27 +1023,6 @@ button:hover {
   }
 }
 
-/* Subtle floating sparkles */
-.page-header::after {
-  content: '✨';
-  position: absolute;
-  top: 20%;
-  right: 5%;
-  font-size: 12px;
-  animation: sparkleFloat 6s ease-in-out infinite;
-  opacity: 0.6;
-}
-
-@keyframes sparkleFloat {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg); 
-    opacity: 0.6; 
-  }
-  50% { 
-    transform: translateY(-10px) rotate(180deg); 
-    opacity: 1; 
-  }
-}
 
 /* Main page - hide scrollbar */
 body, html {

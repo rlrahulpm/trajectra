@@ -4,27 +4,33 @@ A production-ready, full-stack application for managing Thickness Measurement Lo
 
 ## 🚀 Features
 
-- **Real-time Corrosion Monitoring**: Track thickness measurements and corrosion rates
+- **Real-time Corrosion Monitoring**: Track thickness measurements and corrosion rates (1-100 mpy range)
 - **Interactive Sankey Diagrams**: Visualize corrosion flow patterns
 - **Predictive Analytics**: Calculate remaining equipment life based on corrosion rates
 - **RESTful API**: Complete CRUD operations for TML points, measurements, and corrosion data
 - **Responsive UI**: Modern Angular interface with TRAJECTRA branding
 - **Production Ready**: Dockerized deployment with PostgreSQL database
+- **Demo Data**: Automatic loading of 20 TML points with 60 measurements for testing
 
 ## 🏗️ Architecture
 
 ```
 tml-corrosion-angular/
-├── frontend/          # Angular 20 application
+├── frontend/                    # Angular 20 application
 │   ├── src/
 │   ├── Dockerfile
 │   └── nginx.conf
-├── backend/           # Spring Boot API
+├── backend/                     # Spring Boot API
 │   ├── src/
 │   ├── pom.xml
 │   └── Dockerfile
-├── docker-compose.yml # Development environment
-└── docker-compose.prod.yml # Production deployment
+├── database/                    # Database initialization
+│   └── init/                    # PostgreSQL init scripts
+├── docker-compose.yml           # Development environment
+├── docker-compose.prod.yml      # Production deployment
+├── load-dummy-data.sh           # Automatic data loading script
+├── .env                         # Environment variables
+└── insert_specific_dummy_data.sql # SQL script for test data
 ```
 
 ## 🛠️ Tech Stack
@@ -56,24 +62,25 @@ tml-corrosion-angular/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/tml-corrosion-angular.git
-cd tml-corrosion-angular
+git clone https://github.com/rlrahulpm/trajectra.git
+cd trajectra
 ```
 
-2. Copy environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-3. Start the application:
+2. Start the application:
 ```bash
 docker-compose up -d
 ```
 
+3. Load demo data (optional but recommended):
+```bash
+./load-dummy-data.sh
+```
+
 4. Access the application:
 - Frontend: http://localhost
-- Backend API: http://localhost:8080/api
+- Backend API: http://localhost:8081/api
+
+> **Note**: The `.env` file is already configured with default values. The demo data script automatically loads 20 TML points with 60 measurements spanning 3 dates (Jan 1, Feb 1, Mar 1, 2025) with corrosion rates between 1-100 mpy.
 
 ### Local Development
 
@@ -187,36 +194,80 @@ cd frontend
 npm run e2e
 ```
 
+## 🗄️ Database & Demo Data
+
+### Automatic Demo Data Loading
+
+The application includes a script to automatically populate the database with realistic test data:
+
+```bash
+./load-dummy-data.sh
+```
+
+**Demo Data Includes:**
+- **20 TML Points** across different equipment types (Pipes, Vessels, Tanks, Reactors, etc.)
+- **60 Measurements** (3 per TML) on specific dates:
+  - January 1st, 2025
+  - February 1st, 2025  
+  - March 1st, 2025
+- **Corrosion rates** between 1-100 mpy (mils per year)
+- **Realistic thickness degradation** over time
+- **Temperature variations** with seasonal patterns
+- **Equipment classifications** for corrosion severity
+
+The script is intelligent:
+- ✅ Waits for Spring Boot to create database tables
+- ✅ Checks if data already exists to prevent duplicates
+- ✅ Only runs when the database is empty
+- ✅ Provides detailed feedback on the loading process
+
+### Manual Data Loading
+
+If you prefer to load data manually:
+```bash
+# After containers are running and healthy
+cat insert_specific_dummy_data.sql | docker exec -i tml-postgres psql -U postgres -d tml_corrosion
+```
+
 ## 🔧 Configuration
 
 ### Environment Variables
 
-#### Backend
-- `DATABASE_URL`: PostgreSQL connection string
-- `DATABASE_USERNAME`: Database username
-- `DATABASE_PASSWORD`: Database password
-- `PORT`: Server port (default: 8080)
+The `.env` file contains all necessary configuration:
 
-#### Frontend
-- `API_URL`: Backend API URL
+```bash
+# Database Configuration
+DB_NAME=tml_corrosion
+DB_USER=postgres
+DB_PASSWORD=trajectra2024
+
+# Frontend Configuration  
+FRONTEND_PORT=80
+
+# Backend Configuration
+BACKEND_PORT=8080
+```
+
+#### Additional Backend Variables
+- `DATABASE_URL`: PostgreSQL connection string (auto-configured)
+- `DATABASE_USERNAME`: Database username (from .env)
+- `DATABASE_PASSWORD`: Database password (from .env)
+- `PORT`: Server port (8080 internally, exposed as 8081)
+
+#### Frontend Variables
+- `API_URL`: Backend API URL (configured for Docker networking)
 - `PRODUCTION`: Enable production mode
 
 ## 📝 Database Schema
 
-### TML Points Table
+The application uses the following database structure (auto-created by Spring Boot):
+
+### TMLs Table
 ```sql
-CREATE TABLE tml_points (
+CREATE TABLE tmls (
     id BIGSERIAL PRIMARY KEY,
-    tml_number VARCHAR(255) UNIQUE NOT NULL,
-    equipment_name VARCHAR(255) NOT NULL,
-    location VARCHAR(255) NOT NULL,
-    nominal_thickness DOUBLE PRECISION NOT NULL,
-    minimum_thickness DOUBLE PRECISION NOT NULL,
-    material VARCHAR(255),
-    service VARCHAR(255),
-    notes TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    circuit_id VARCHAR(255) NOT NULL,
+    tml_id VARCHAR(255) NOT NULL
 );
 ```
 
@@ -224,17 +275,29 @@ CREATE TABLE tml_points (
 ```sql
 CREATE TABLE measurements (
     id BIGSERIAL PRIMARY KEY,
-    tml_point_id BIGINT REFERENCES tml_points(id),
-    measurement_date TIMESTAMP NOT NULL,
-    thickness DOUBLE PRECISION NOT NULL,
-    corrosion_rate DOUBLE PRECISION,
-    remaining_life DOUBLE PRECISION,
-    inspector VARCHAR(255),
-    equipment_condition VARCHAR(255),
-    comments TEXT,
-    created_at TIMESTAMP NOT NULL
+    tml_record_id BIGINT REFERENCES tmls(id),
+    measurement_date DATE NOT NULL,
+    thickness DOUBLE PRECISION,
+    temperature DOUBLE PRECISION,
+    corrosion_rate DOUBLE PRECISION
 );
 ```
+
+### Classifications Table
+```sql
+CREATE TABLE classifications (
+    id BIGSERIAL PRIMARY KEY,
+    classification_type VARCHAR(255) NOT NULL,
+    min_value DOUBLE PRECISION,
+    max_value DOUBLE PRECISION,
+    range_label VARCHAR(255) NOT NULL
+);
+```
+
+**Sample Data Structure:**
+- **TML-001 to TML-020**: Covering various equipment (PIPE-100-CS, VESSEL-200-SS, TANK-300-CS, etc.)
+- **Measurements**: Thickness, temperature, and corrosion rate data
+- **Classifications**: Corrosion rate and thickness severity ranges
 
 ## 🤝 Contributing
 

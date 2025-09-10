@@ -20,12 +20,23 @@ if [ "$TABLE_COUNT" -eq "3" ]; then
     DATA_COUNT=$(docker exec tml-postgres psql -U postgres -d tml_corrosion -t -c "SELECT COUNT(*) FROM tmls;")
     
     if [ "$DATA_COUNT" -eq "0" ]; then
+        echo "Loading 100 TMLs across 15 circuits with trending patterns..."
+        echo "- TMLs 001-040: Increasing corrosion/temperature trends"
+        echo "- TMLs 041-080: Decreasing corrosion/temperature trends"
+        echo "- TMLs 081-100: Stable trends with minor variations"
+        
         cat insert_specific_dummy_data.sql | docker exec -i tml-postgres psql -U postgres -d tml_corrosion
-        echo "Dummy data loaded successfully!"
+        echo ""
+        echo "✅ Dummy data loaded successfully!"
+        echo "📊 Generated 100 TMLs with 300 measurements (3 dates each)"
+        echo "🏭 Distributed across 15 different circuits"
+        echo "📈 40% increasing trends, 40% decreasing trends, 20% stable"
     else
-        echo "Data already exists in the database. Skipping data load."
+        echo "Data already exists in the database (found $DATA_COUNT TMLs)."
+        echo "To reload data, first clear the database or restart with fresh Docker volumes."
     fi
 else
     echo "Error: Tables not found. Make sure the backend application has started properly."
+    echo "Expected 3 tables (tmls, measurements, classifications), found $TABLE_COUNT"
     exit 1
 fi
